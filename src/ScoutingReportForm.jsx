@@ -3,7 +3,7 @@ import { useState } from 'react';
 export default function ScoutingReportForm() {
   const [formData, setFormData] = useState({
     playerName: '',
-    date: '',
+    reportDate: '',
     team: '',
     opposition: '',
     position: '',
@@ -17,7 +17,9 @@ export default function ScoutingReportForm() {
     transfermarktUrl: '',
     fixtureSearch: '',
     fixtureTeamName: '',
-    fixtureDate: ''
+    nationality: '',
+    age: '',
+    photoUrl: ''
   });
 
   const [report, setReport] = useState('');
@@ -41,15 +43,17 @@ export default function ScoutingReportForm() {
     if (!playerId) return;
 
     try {
-      const response = await fetch(`/api/player-info/${playerId}`);
+      const response = await fetch(`https://transfermarkt-api.vercel.app/player/${playerId}`);
       const data = await response.json();
 
       setFormData((prev) => ({
         ...prev,
         playerName: data.name || prev.playerName,
         team: data.club || prev.team,
-        dateOfBirth: data.dob || '',
-        nationality: data.nationality || ''
+        position: data.position || prev.position,
+        nationality: data.nationality || prev.nationality,
+        age: data.age || prev.age,
+        photoUrl: data.image || ''
       }));
     } catch (error) {
       console.error("Error fetching Transfermarkt data", error);
@@ -63,14 +67,34 @@ export default function ScoutingReportForm() {
   };
 
   const handleFixtureSearch = async () => {
-    const { fixtureTeamName, fixtureDate } = formData;
-    const mockFixtures = [
-      `${fixtureTeamName} vs FC Example - ${fixtureDate}`,
-      `${fixtureTeamName} vs Another Team - ${fixtureDate}`,
-      `${fixtureTeamName} vs Sample Club - ${fixtureDate}`
-    ];
-    setFixtureOptions(mockFixtures);
-    setSelectedFixtureIndex(null);
+    const { fixtureTeamName } = formData;
+    if (!fixtureTeamName) return;
+
+    try {
+      const response = await fetch(`https://api.football-data.org/v4/teams`, {
+        headers: {
+          'X-Auth-Token': 'YOUR_API_KEY_HERE' // Replace with your API key
+        }
+      });
+
+      const data = await response.json();
+      const team = data.teams.find(team => team.name.toLowerCase() === fixtureTeamName.toLowerCase());
+      if (!team) return;
+
+      const teamId = team.id;
+      const fixturesResponse = await fetch(`https://api.football-data.org/v4/teams/${teamId}/matches?status=SCHEDULED`, {
+        headers: {
+          'X-Auth-Token': 'YOUR_API_KEY_HERE'
+        }
+      });
+
+      const fixturesData = await fixturesResponse.json();
+      const fixtures = fixturesData.matches.map(match => `${match.homeTeam.name} vs ${match.awayTeam.name} - ${match.utcDate.split('T')[0]}`);
+      setFixtureOptions(fixtures);
+    } catch (err) {
+      console.error("Error fetching fixtures by team:", err);
+      setFixtureOptions([]);
+    }
   };
 
   const selectFixture = (fixture, index) => {
@@ -84,11 +108,13 @@ export default function ScoutingReportForm() {
       ? `https://www.transfermarkt.com/player/profil/spieler/${transfermarktId}`
       : '';
 
-    const fullReport = `**Player:** ${formData.playerName}\n**Date:** ${formData.date}\n**Team:** ${formData.team}\n**Opposition:** ${formData.opposition}\n**Position:** ${formData.position}\n**Formation:** ${formData.formation}\n**Tactical Role:** ${formData.tacticalRole}\n**MG:** ${formData.mg}/10\n$${
+    const fullReport = `**Player:** ${formData.playerName}\n**Date:** ${formData.reportDate}\n**Team:** ${formData.team}\n**Opposition:** ${formData.opposition}\n**Position:** ${formData.position}\n**Formation:** ${formData.formation}\n**Tactical Role:** ${formData.tacticalRole}\n**MG:** ${formData.mg}/10\n$${
       transfermarktLink ? `**Transfermarkt Profile:** [Link](${transfermarktLink})\n` : ''
     }$${
       formData.fixtureSearch ? `**Fixture:** ${formData.fixtureSearch}\n` : ''
-    }\n**Physical**\n${formData.physical}\n\n**OOP**\n${formData.oop}\n\n**IP**\n${formData.ip}\n\n**Summary**\n${formData.summary}`;
+    }
+**Nationality:** ${formData.nationality}\n**Age:** ${formData.age}\n
+**Physical**\n${formData.physical}\n\n**OOP**\n${formData.oop}\n\n**IP**\n${formData.ip}\n\n**Summary**\n${formData.summary}`;
 
     setReport(fullReport);
 
@@ -117,15 +143,20 @@ export default function ScoutingReportForm() {
     <div style={{ maxWidth: '720px', margin: 'auto', padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h2 style={{ marginBottom: '1rem' }}>Scouting Report Form</h2>
 
-      {[['playerName', 'Player Name'], ['date', 'Date'], ['team', 'Team / Club'], ['opposition', 'Opposition'], ['position', 'Position'], ['formation', 'Formation'], ['tacticalRole', 'Tactical Role'], ['mg', 'MG (1–10)']]
+      <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+
+      {formData.photoUrl && (
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <img src={formData.photoUrl} alt="Player" style={{ width: '120px', borderRadius: '8px' }} />
+        </div>
+      )}
+
+      {[['playerName', 'Player Name'], ['reportDate', 'Report Date'], ['team', 'Team / Club'], ['opposition', 'Opposition'], ['position', 'Position'], ['formation', 'Formation'], ['tacticalRole', 'Tactical Role'], ['mg', 'MG (1–10)'], ['nationality', 'Nationality'], ['age', 'Age']]
         .map(([key, label]) => (
           <input key={key} name={key} placeholder={label} onChange={handleChange} value={formData[key]} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
         ))}
 
-      <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
-
-      <input name="fixtureTeamName" placeholder="Team Name for Fixture Search" onChange={handleChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
-      <input name="fixtureDate" type="date" onChange={handleChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+      <input name="fixtureTeamName" placeholder="Team Name for Fixture Search" onChange={handleChange} value={formData.fixtureTeamName} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
       <button onClick={handleFixtureSearch} style={{ width: '100%', padding: '10px', marginBottom: '12px', background: '#eee', borderRadius: '6px' }}>Search Fixtures</button>
 
       {fixtureOptions.map((fixture, i) => (
