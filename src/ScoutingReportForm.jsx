@@ -23,7 +23,7 @@ const ScoutingReportForm = () => {
   });
 
   const extractPlayerName = (url) => {
-    const regex = /transfermarkt\.[^\/]+\/([^\/]+)\/profil/;
+    const regex = /transfermarkt\.[^/]+\/([^/]+)\/profil/;
     const match = url.match(regex);
     return match ? match[1].replace(/-/g, ' ') : null;
   };
@@ -37,7 +37,7 @@ const ScoutingReportForm = () => {
 
     try {
       const response = await fetch(
-        `https://transfermarkt-db.p.rapidapi.com/players/search-player?query=${encodeURIComponent(playerName)}`,
+        `https://transfermarkt-db.p.rapidapi.com/v1/search/quick-search?locale=DE&query=${encodeURIComponent(playerName)}`,
         {
           method: 'GET',
           headers: {
@@ -50,12 +50,12 @@ const ScoutingReportForm = () => {
       const data = await response.json();
       console.log('API response:', data);
 
-      if (!data || !Array.isArray(data) || data.length === 0) {
+      if (!data || !data.players || data.players.length === 0) {
         alert('Player not found or invalid response from API.');
         return;
       }
 
-      const player = data[0];
+      const player = data.players[0];
       setPlayerData(player);
       setFormFields((prev) => ({
         ...prev,
