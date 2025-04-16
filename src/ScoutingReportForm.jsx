@@ -28,6 +28,7 @@ export default function ScoutingReportForm() {
   const [selectedFixtureIndex, setSelectedFixtureIndex] = useState(null);
 
   const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
+  const RAPID_API_KEY = "ec0f6da911msh397a0a7a4ac8a3fp1f44f2jsn249a9bbcf3cd";
 
   const extractTransfermarktId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
@@ -75,8 +76,32 @@ export default function ScoutingReportForm() {
           photoUrl: data.image || ''
         }));
       } catch (err2) {
-        console.error("Both APIs failed:", err2);
-        alert("Player not found. Check the link or try a different one.");
+        console.warn("GitHub-hosted API failed, trying RapidAPI fallback", err2);
+        try {
+          const rapidRes = await fetch(`https://transfermarket.p.rapidapi.com/players/get-profile?transfermarktId=${playerId}`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': RAPID_API_KEY,
+              'X-RapidAPI-Host': 'transfermarket.p.rapidapi.com'
+            }
+          });
+          const rapidData = await rapidRes.json();
+
+          if (!rapidData || !rapidData.name) throw new Error("RapidAPI response incomplete");
+
+          setFormData((prev) => ({
+            ...prev,
+            playerName: rapidData.name || '',
+            team: rapidData.club || '',
+            position: rapidData.position || '',
+            nationality: rapidData.nationality || '',
+            age: rapidData.age || '',
+            photoUrl: rapidData.image || ''
+          }));
+        } catch (err3) {
+          console.error("All APIs failed:", err3);
+          alert("Player not found. Check the link or try a different one.");
+        }
       }
     }
   };
