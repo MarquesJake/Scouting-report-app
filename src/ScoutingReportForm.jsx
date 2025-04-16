@@ -43,10 +43,10 @@ export default function ScoutingReportForm() {
     }
 
     try {
-      const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://transfermarkt-api.vercel.app/player/${playerId}`)}`);
-      const data = await response.json();
-
-      if (!data.name) throw new Error("Primary API failed or player not found");
+      // Try local running API first (priority)
+      let response = await fetch(`http://localhost:8000/player/${playerId}`);
+      if (!response.ok) throw new Error("Local API failed");
+      let data = await response.json();
 
       setFormData((prev) => ({
         ...prev,
@@ -58,8 +58,26 @@ export default function ScoutingReportForm() {
         photoUrl: data.image || ''
       }));
     } catch (err1) {
-      console.error("Failed to fetch from GitHub Transfermarkt API:", err1);
-      alert("Player not found. Check the link or try a different one.");
+      console.warn("Local API failed, trying GitHub-hosted fallback", err1);
+      try {
+        const fallback = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://transfermarkt-api.vercel.app/player/${playerId}`)}`);
+        const data = await fallback.json();
+
+        if (!data.name) throw new Error("Fallback API failed or player not found");
+
+        setFormData((prev) => ({
+          ...prev,
+          playerName: data.name || '',
+          team: data.club || '',
+          position: data.position || '',
+          nationality: data.nationality || '',
+          age: data.age || '',
+          photoUrl: data.image || ''
+        }));
+      } catch (err2) {
+        console.error("Both APIs failed:", err2);
+        alert("Player not found. Check the link or try a different one.");
+      }
     }
   };
 
