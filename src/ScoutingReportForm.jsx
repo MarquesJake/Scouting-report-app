@@ -22,12 +22,7 @@ export default function ScoutingReportForm() {
     photoUrl: ''
   });
 
-  const [report, setReport] = useState('');
-  const [fixtureOptions, setFixtureOptions] = useState([]);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [selectedFixtureIndex, setSelectedFixtureIndex] = useState(null);
-
-  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
 
   const extractTransfermarktId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
@@ -35,19 +30,20 @@ export default function ScoutingReportForm() {
   };
 
   const autoFillFromTransfermarkt = async () => {
-    const url = formData.transfermarktUrl;
-    const playerId = extractTransfermarktId(url);
+    const playerId = extractTransfermarktId(formData.transfermarktUrl);
     if (!playerId) {
-      alert("Could not extract player ID from URL");
+      alert("Invalid Transfermarkt URL. Could not extract player ID.");
       return;
     }
 
     try {
-      const response = await fetch(`https://corsproxy.io/?https://transfermarkt-api.vercel.app/player/${playerId}`);
+      const response = await fetch(
+        `https://corsproxy.io/?https://transfermarkt-api.vercel.app/player/${playerId}`
+      );
       const data = await response.json();
 
-      if (!data.name) {
-        alert("Player not found. Try a different Transfermarkt URL.");
+      if (!data || !data.name) {
+        alert("Player data not found. Check Transfermarkt ID.");
         return;
       }
 
@@ -60,8 +56,8 @@ export default function ScoutingReportForm() {
         age: data.age || '',
         photoUrl: data.image || ''
       }));
-    } catch (err) {
-      console.error("Failed to fetch Transfermarkt data:", err);
+    } catch (error) {
+      console.error("Error fetching data:", error);
       alert("Something went wrong while fetching data.");
     }
   };
@@ -69,6 +65,7 @@ export default function ScoutingReportForm() {
   return (
     <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
       <h2>Scouting Report Form</h2>
+      
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '10px' }}>
         <input
           name="transfermarktUrl"
@@ -77,12 +74,30 @@ export default function ScoutingReportForm() {
           onChange={(e) => setFormData({ ...formData, transfermarktUrl: e.target.value })}
           style={{ flex: 3, padding: '8px' }}
         />
-        <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>Search</button>
+        <button
+          onClick={autoFillFromTransfermarkt}
+          style={{ flex: 1, padding: '8px 16px', cursor: 'pointer' }}
+        >
+          Search
+        </button>
       </div>
+
       {formData.photoUrl && (
-        <img src={formData.photoUrl} alt="Player" style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }} />
+        <img
+          src={formData.photoUrl}
+          alt="Player"
+          style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }}
+        />
       )}
-      {/* Other form fields go here... */}
+
+      <input placeholder="Player Name" value={formData.playerName} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input placeholder="Report Date" value={formData.reportDate} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input placeholder="Team / Club" value={formData.team} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input placeholder="Position" value={formData.position} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input placeholder="Nationality" value={formData.nationality} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input placeholder="Age" value={formData.age} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      
+      {/* You can add the rest of the fields here just like above */}
     </div>
   );
 }
