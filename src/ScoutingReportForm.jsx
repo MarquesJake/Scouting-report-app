@@ -43,11 +43,16 @@ export default function ScoutingReportForm() {
       const response = await fetch(`https://transfermarkt-api.vercel.app/player/${playerId}`);
       const data = await response.json();
 
-      const formattedName = data.name || '';
+      console.log("TM API data:", data);
+
+      if (!data.name) {
+        alert("Player not found. Double check the Transfermarkt link or try a different player.");
+        return;
+      }
 
       setFormData((prev) => ({
         ...prev,
-        playerName: formattedName,
+        playerName: data.name || prev.playerName,
         team: data.club || prev.team,
         position: data.position || prev.position,
         nationality: data.nationality || prev.nationality,
@@ -181,4 +186,3 @@ export default function ScoutingReportForm() {
     </div>
   );
 }
-
