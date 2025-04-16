@@ -23,7 +23,7 @@ export default function ScoutingReportForm() {
   const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
 
-  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNG5X2XYJZBWELFVEyl6uHNi3ilnEeI_zKQfE/exec";
+  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
 
 
   const extractTransfermarktId = (url) => {
