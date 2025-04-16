@@ -22,10 +22,7 @@ export default function ScoutingReportForm() {
     photoUrl: ''
   });
 
-  const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
-  const [popupVisible, setPopupVisible] = useState(false);
-  const [selectedFixtureIndex, setSelectedFixtureIndex] = useState(null);
 
   const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
 
@@ -66,23 +63,76 @@ export default function ScoutingReportForm() {
     }
   };
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   return (
     <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
       <h2>Scouting Report Form</h2>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '10px' }}>
         <input
           name="transfermarktUrl"
           placeholder="Transfermarkt URL"
           value={formData.transfermarktUrl}
-          onChange={(e) => setFormData({ ...formData, transfermarktUrl: e.target.value })}
+          onChange={handleChange}
           style={{ flex: 3, padding: '8px' }}
         />
         <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>Search</button>
       </div>
+
       {formData.photoUrl && (
         <img src={formData.photoUrl} alt="Player" style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }} />
       )}
-      {/* Other form fields go here... */}
+
+      {[
+        ['playerName', 'Player Name'],
+        ['reportDate', 'Report Date'],
+        ['team', 'Team / Club'],
+        ['opposition', 'Opposition'],
+        ['position', 'Position'],
+        ['formation', 'Formation'],
+        ['tacticalRole', 'Tactical Role'],
+        ['mg', 'MG (1–10)'],
+        ['nationality', 'Nationality'],
+        ['age', 'Age'],
+        ['fixtureTeamName', 'Team Name for Fixture Search']
+      ].map(([key, label]) => (
+        <input
+          key={key}
+          name={key}
+          placeholder={label}
+          value={formData[key]}
+          onChange={handleChange}
+          style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
+        />
+      ))}
+
+      <textarea
+        name="physical"
+        placeholder="Physical"
+        onChange={handleChange}
+        style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }}
+      />
+      <textarea
+        name="oop"
+        placeholder="OOP"
+        onChange={handleChange}
+        style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }}
+      />
+      <textarea
+        name="ip"
+        placeholder="IP"
+        onChange={handleChange}
+        style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }}
+      />
+      <textarea
+        name="summary"
+        placeholder="Summary"
+        onChange={handleChange}
+        style={{ width: '100%', minHeight: '100px', marginBottom: '10px', padding: '8px' }}
+      />
     </div>
   );
 }
