@@ -34,7 +34,8 @@ export default function ScoutingReportForm() {
     return match ? match[1] : null;
   };
 
-  const autoFillFromTransfermarkt = async (url) => {
+  const autoFillFromTransfermarkt = async () => {
+    const url = formData.transfermarktUrl;
     const playerId = extractTransfermarktId(url);
     if (!playerId) return;
 
@@ -42,12 +43,11 @@ export default function ScoutingReportForm() {
       const response = await fetch(`https://transfermarkt-api.vercel.app/player/${playerId}`);
       const data = await response.json();
 
-      const nameFromUrl = url.split('/')[3]?.replace(/-/g, ' ');
-      const formattedName = nameFromUrl?.split(' ').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+      const formattedName = data.name || '';
 
       setFormData((prev) => ({
         ...prev,
-        playerName: formattedName || prev.playerName,
+        playerName: formattedName,
         team: data.club || prev.team,
         position: data.position || prev.position,
         nationality: data.nationality || prev.nationality,
@@ -63,10 +63,9 @@ export default function ScoutingReportForm() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleTransfermarktChange = async (e) => {
+  const handleTransfermarktChange = (e) => {
     const url = e.target.value;
     setFormData((prev) => ({ ...prev, transfermarktUrl: url }));
-    await autoFillFromTransfermarkt(url);
   };
 
   const handleFixtureSearch = async () => {
@@ -144,15 +143,17 @@ export default function ScoutingReportForm() {
 
   return (
     <div style={{ maxWidth: '720px', margin: 'auto', padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-      <h2 style={{ marginBottom: '1rem' }}>Scouting Report Form</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        {formData.photoUrl && (
+          <img src={formData.photoUrl} alt="Player" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
+        )}
+        <h2 style={{ marginBottom: '0' }}>Scouting Report Form</h2>
+      </div>
 
-      <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
-
-      {formData.photoUrl && (
-        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-          <img src={formData.photoUrl} alt="Player" style={{ width: '120px', borderRadius: '8px' }} />
-        </div>
-      )}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
+        <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} value={formData.transfermarktUrl} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        <button onClick={autoFillFromTransfermarkt} style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #ccc', background: '#eee' }}>Search</button>
+      </div>
 
       {[['playerName', 'Player Name'], ['reportDate', 'Report Date'], ['team', 'Team / Club'], ['opposition', 'Opposition'], ['position', 'Position'], ['formation', 'Formation'], ['tacticalRole', 'Tactical Role'], ['mg', 'MG (1–10)'], ['nationality', 'Nationality'], ['age', 'Age']]
         .map(([key, label]) => (
