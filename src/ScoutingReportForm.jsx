@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './style.css';
 
 const ScoutingReportForm = () => {
-  const [playerUrl, setPlayerUrl] = useState('');
+  const [playerQuery, setPlayerQuery] = useState('');
   const [playerData, setPlayerData] = useState(null);
   const [formFields, setFormFields] = useState({
     playerName: '',
@@ -22,22 +22,15 @@ const ScoutingReportForm = () => {
     summary: ''
   });
 
-  const extractPlayerName = (url) => {
-    const regex = /transfermarkt\.[^/]+\/([^/]+)\/profil/;
-    const match = url.match(regex);
-    return match ? match[1].replace(/-/g, ' ') : null;
-  };
-
   const handleSearch = async () => {
-    const playerName = extractPlayerName(playerUrl);
-    if (!playerName) {
-      alert('Invalid Transfermarkt URL');
+    if (!playerQuery) {
+      alert('Please enter a player name to search.');
       return;
     }
 
     try {
       const response = await fetch(
-        `https://transfermarkt-db.p.rapidapi.com/v1/search/quick-search?locale=EN&query=${encodeURIComponent(playerName)}`,
+        `https://transfermarkt-db.p.rapidapi.com/v1/search/quick-search?locale=EN&query=${encodeURIComponent(playerQuery)}`,
         {
           method: 'GET',
           headers: {
@@ -82,9 +75,9 @@ const ScoutingReportForm = () => {
       <div className="input-group">
         <input
           type="text"
-          value={playerUrl}
-          onChange={(e) => setPlayerUrl(e.target.value)}
-          placeholder="Paste Transfermarkt player URL"
+          value={playerQuery}
+          onChange={(e) => setPlayerQuery(e.target.value)}
+          placeholder="Enter player name (e.g. Erling Haaland)"
         />
         <button onClick={handleSearch}>Search</button>
       </div>
