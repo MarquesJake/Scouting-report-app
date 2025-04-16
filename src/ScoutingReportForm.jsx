@@ -50,12 +50,12 @@ const ScoutingReportForm = () => {
       const data = await response.json();
       console.log('API response:', data);
 
-      if (!data || !data.players || data.players.length === 0) {
+      if (!data || !data.results || data.results.length === 0) {
         alert('Player not found or invalid response from API.');
         return;
       }
 
-      const player = data.players[0];
+      const player = data.results[0];
       setPlayerData(player);
       setFormFields((prev) => ({
         ...prev,
