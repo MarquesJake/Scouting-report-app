@@ -37,20 +37,20 @@ const ScoutingReportForm = () => {
 
     try {
       const response = await fetch(
-        `https://transfermarket.p.rapidapi.com/players/search-player?query=${encodeURIComponent(playerName)}`,
+        `https://transfermarkt-db.p.rapidapi.com/players/search-player?query=${encodeURIComponent(playerName)}`,
         {
           method: 'GET',
           headers: {
             'X-RapidAPI-Key': 'ec0f6da911msh397a0a7a4ac8a3fp1f44f2jsn249a9bbcf3cd',
-            'X-RapidAPI-Host': 'transfermarket.p.rapidapi.com'
+            'X-RapidAPI-Host': 'transfermarkt-db.p.rapidapi.com'
           }
         }
       );
 
       const data = await response.json();
-      console.log('API response:', data); // 🪵 Log the raw API response here
+      console.log('API response:', data);
 
-      if (!data || data.length === 0) {
+      if (!data || !Array.isArray(data) || data.length === 0) {
         alert('Player not found or invalid response from API.');
         return;
       }
