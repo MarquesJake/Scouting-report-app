@@ -22,7 +22,11 @@ export default function ScoutingReportForm() {
     photoUrl: ''
   });
 
+  const [fixtureOptions, setFixtureOptions] = useState([]);
   const [popupVisible, setPopupVisible] = useState(false);
+  const [report, setReport] = useState('');
+
+  const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec';
 
   const extractTransfermarktId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
@@ -31,21 +35,13 @@ export default function ScoutingReportForm() {
 
   const autoFillFromTransfermarkt = async () => {
     const playerId = extractTransfermarktId(formData.transfermarktUrl);
-    if (!playerId) {
-      alert("Invalid Transfermarkt URL. Could not extract player ID.");
-      return;
-    }
+    if (!playerId) return alert("Invalid Transfermarkt URL");
 
     try {
-      const response = await fetch(
-        `https://corsproxy.io/?https://transfermarkt-api.vercel.app/player/${playerId}`
-      );
-      const data = await response.json();
+      const res = await fetch(`https://corsproxy.io/?https://transfermarkt-api.vercel.app/player/${playerId}`);
+      const data = await res.json();
 
-      if (!data || !data.name) {
-        alert("Player data not found. Check Transfermarkt ID.");
-        return;
-      }
+      if (!data.name) return alert("Failed to retrieve player data");
 
       setFormData((prev) => ({
         ...prev,
@@ -56,8 +52,8 @@ export default function ScoutingReportForm() {
         age: data.age || '',
         photoUrl: data.image || ''
       }));
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (err) {
+      console.error("Error fetching player data:", err);
       alert("Something went wrong while fetching data.");
     }
   };
@@ -65,7 +61,7 @@ export default function ScoutingReportForm() {
   return (
     <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
       <h2>Scouting Report Form</h2>
-      
+
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '10px' }}>
         <input
           name="transfermarktUrl"
@@ -74,30 +70,55 @@ export default function ScoutingReportForm() {
           onChange={(e) => setFormData({ ...formData, transfermarktUrl: e.target.value })}
           style={{ flex: 3, padding: '8px' }}
         />
-        <button
-          onClick={autoFillFromTransfermarkt}
-          style={{ flex: 1, padding: '8px 16px', cursor: 'pointer' }}
-        >
-          Search
-        </button>
+        <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>Search</button>
       </div>
 
       {formData.photoUrl && (
-        <img
-          src={formData.photoUrl}
-          alt="Player"
-          style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }}
-        />
+        <img src={formData.photoUrl} alt="Player" style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }} />
       )}
 
-      <input placeholder="Player Name" value={formData.playerName} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      <input placeholder="Report Date" value={formData.reportDate} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      <input placeholder="Team / Club" value={formData.team} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      <input placeholder="Position" value={formData.position} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      <input placeholder="Nationality" value={formData.nationality} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      <input placeholder="Age" value={formData.age} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      
-      {/* You can add the rest of the fields here just like above */}
+      {[
+        ['playerName', 'Player Name'],
+        ['reportDate', 'Report Date'],
+        ['team', 'Team / Club'],
+        ['opposition', 'Opposition'],
+        ['position', 'Position'],
+        ['formation', 'Formation'],
+        ['tacticalRole', 'Tactical Role'],
+        ['mg', 'MG (1–10)'],
+        ['nationality', 'Nationality'],
+        ['age', 'Age'],
+        ['fixtureTeamName', 'Team Name for Fixture Search']
+      ].map(([key, label]) => (
+        <input
+          key={key}
+          name={key}
+          placeholder={label}
+          value={formData[key]}
+          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+          style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
+        />
+      ))}
+
+      {['physical', 'oop', 'ip', 'summary'].map((key) => (
+        <textarea
+          key={key}
+          name={key}
+          placeholder={key.toUpperCase()}
+          value={formData[key]}
+          onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+          style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }}
+        />
+      ))}
+
+      <button
+        onClick={() => {
+          alert('Coming soon: Upload to sheet!');
+        }}
+        style={{ width: '100%', padding: '12px', background: '#222', color: '#fff', border: 'none', borderRadius: '6px' }}
+      >
+        Upload Report
+      </button>
     </div>
   );
 }
