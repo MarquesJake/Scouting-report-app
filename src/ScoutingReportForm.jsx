@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function ScoutingReportForm() {
   const [formData, setFormData] = useState({
@@ -34,10 +34,6 @@ export default function ScoutingReportForm() {
     return match ? match[1] : null;
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   const autoFillFromTransfermarkt = async (url) => {
     const playerId = extractTransfermarktId(url);
     if (!playerId) return;
@@ -48,16 +44,20 @@ export default function ScoutingReportForm() {
 
       setFormData((prev) => ({
         ...prev,
-        playerName: data.name || prev.playerName,
-        team: data.club || prev.team,
-        position: data.position || prev.position,
-        nationality: data.nationality || prev.nationality,
-        age: data.age || prev.age,
+        playerName: data.name || '',
+        team: data.club || '',
+        position: data.position || '',
+        nationality: data.nationality || '',
+        age: data.age || '',
         photoUrl: data.image || ''
       }));
     } catch (error) {
       console.error("Error fetching Transfermarkt data", error);
     }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleTransfermarktChange = async (e) => {
