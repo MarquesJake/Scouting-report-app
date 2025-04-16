@@ -23,7 +23,8 @@ export default function ScoutingReportForm() {
   const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
 
-  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNG...REPLACE_THIS.../exec"; // Replace with your actual deployed script URL
+  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNG5X2XYJZBWELFVEyl6uHNi3ilnEeI_zKQfE/exec";
+
 
   const extractTransfermarktId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
