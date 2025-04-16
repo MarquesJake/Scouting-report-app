@@ -3,6 +3,7 @@ import './style.css';
 
 const ScoutingReportForm = () => {
   const [playerUrl, setPlayerUrl] = useState('');
+  const [playerData, setPlayerData] = useState(null);
   const [formFields, setFormFields] = useState({
     playerName: '',
     reportDate: '',
@@ -22,7 +23,7 @@ const ScoutingReportForm = () => {
   });
 
   const extractPlayerName = (url) => {
-    const regex = /transfermarkt\.[^/]+\/([^/]+)\/profil/;
+    const regex = /transfermarkt\.[^\/]+\/([^\/]+)\/profil/;
     const match = url.match(regex);
     return match ? match[1].replace(/-/g, ' ') : null;
   };
@@ -47,23 +48,25 @@ const ScoutingReportForm = () => {
       );
 
       const data = await response.json();
+      console.log('API response:', data); // 🪵 Log the raw API response here
 
-      if (!Array.isArray(data) || data.length === 0 || !data[0].name) {
+      if (!data || data.length === 0) {
         alert('Player not found or invalid response from API.');
         return;
       }
 
       const player = data[0];
+      setPlayerData(player);
       setFormFields((prev) => ({
         ...prev,
         playerName: player.name || '',
         team: player.club || '',
-        age: player.age ? player.age.toString() : '',
+        age: player.age || '',
         nationality: player.nationality || '',
         position: player.position || ''
       }));
     } catch (error) {
-      console.error('Error fetching player data:', error);
+      console.error('Error fetching data:', error);
       alert('Something went wrong while fetching data.');
     }
   };
