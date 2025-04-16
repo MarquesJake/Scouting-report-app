@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './style.css';
 
 const ScoutingReportForm = () => {
-  const [playerQuery, setPlayerQuery] = useState('');
+  const [playerUrl, setPlayerUrl] = useState('');
   const [playerData, setPlayerData] = useState(null);
   const [formFields, setFormFields] = useState({
     playerName: '',
@@ -23,14 +23,11 @@ const ScoutingReportForm = () => {
   });
 
   const handleSearch = async () => {
-    if (!playerQuery) {
-      alert('Please enter a player name to search.');
-      return;
-    }
+    const playerName = "Erling Haaland"; // Hardcoded for now to test API
 
     try {
       const response = await fetch(
-        `https://transfermarkt-db.p.rapidapi.com/v1/search/quick-search?locale=EN&query=${encodeURIComponent(playerQuery)}`,
+        `https://transfermarkt-db.p.rapidapi.com/v1/search/quick-search?locale=EN&query=${encodeURIComponent(playerName)}`,
         {
           method: 'GET',
           headers: {
@@ -75,9 +72,9 @@ const ScoutingReportForm = () => {
       <div className="input-group">
         <input
           type="text"
-          value={playerQuery}
-          onChange={(e) => setPlayerQuery(e.target.value)}
-          placeholder="Enter player name (e.g. Erling Haaland)"
+          value={playerUrl}
+          onChange={(e) => setPlayerUrl(e.target.value)}
+          placeholder="Paste Transfermarkt player URL"
         />
         <button onClick={handleSearch}>Search</button>
       </div>
