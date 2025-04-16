@@ -73,28 +73,13 @@ export default function ScoutingReportForm() {
     if (!fixtureTeamName) return;
 
     try {
-      const response = await fetch(`https://api.football-data.org/v4/teams`, {
-        headers: {
-          'X-Auth-Token': 'YOUR_API_KEY_HERE'
-        }
-      });
-
+      const response = await fetch(`https://transfermarkt-api.vercel.app/fixtures/${encodeURIComponent(fixtureTeamName)}`);
       const data = await response.json();
-      const team = data.teams.find(team => team.name.toLowerCase() === fixtureTeamName.toLowerCase());
-      if (!team) return;
 
-      const teamId = team.id;
-      const fixturesResponse = await fetch(`https://api.football-data.org/v4/teams/${teamId}/matches?status=SCHEDULED`, {
-        headers: {
-          'X-Auth-Token': 'YOUR_API_KEY_HERE'
-        }
-      });
-
-      const fixturesData = await fixturesResponse.json();
-      const fixtures = fixturesData.matches.map(match => `${match.homeTeam.name} vs ${match.awayTeam.name} - ${match.utcDate.split('T')[0]}`);
+      const fixtures = data.fixtures?.map(match => `${match.home} vs ${match.away} - ${match.date}`) || [];
       setFixtureOptions(fixtures);
     } catch (err) {
-      console.error("Error fetching fixtures by team:", err);
+      console.error("Error fetching fixtures from Transfermarkt API:", err);
       setFixtureOptions([]);
     }
   };
@@ -151,8 +136,8 @@ export default function ScoutingReportForm() {
       </div>
 
       <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
-        <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} value={formData.transfermarktUrl} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
-        <button onClick={autoFillFromTransfermarkt} style={{ padding: '10px 20px', borderRadius: '6px', border: '1px solid #ccc', background: '#eee' }}>Search</button>
+        <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} value={formData.transfermarktUrl} style={{ flex: 4, padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '10px 0', borderRadius: '6px', border: '1px solid #ccc', background: '#eee' }}>Search</button>
       </div>
 
       {[['playerName', 'Player Name'], ['reportDate', 'Report Date'], ['team', 'Team / Club'], ['opposition', 'Opposition'], ['position', 'Position'], ['formation', 'Formation'], ['tacticalRole', 'Tactical Role'], ['mg', 'MG (1–10)'], ['nationality', 'Nationality'], ['age', 'Age']]
@@ -196,3 +181,4 @@ export default function ScoutingReportForm() {
     </div>
   );
 }
+
