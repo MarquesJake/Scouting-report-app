@@ -22,9 +22,12 @@ export default function ScoutingReportForm() {
     photoUrl: ''
   });
 
+  const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [report, setReport] = useState('');
+  const [selectedFixtureIndex, setSelectedFixtureIndex] = useState(null);
+
+  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
 
   const extractTransfermarktId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
@@ -40,11 +43,8 @@ export default function ScoutingReportForm() {
     }
 
     try {
-      const response = await fetch(
-        `https://api.allorigins.win/get?url=${encodeURIComponent(`https://transfermarkt-api.vercel.app/player/${playerId}`)}`
-      );
-      const result = await response.json();
-      const data = JSON.parse(result.contents);
+      const response = await fetch(`https://corsproxy.io/?https://transfermarkt-api.vercel.app/player/${playerId}`);
+      const data = await response.json();
 
       if (!data.name) {
         alert("Player not found. Try a different Transfermarkt URL.");
@@ -66,64 +66,23 @@ export default function ScoutingReportForm() {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   return (
     <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
       <h2>Scouting Report Form</h2>
-
-      {/* Transfermarkt URL search */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '10px' }}>
         <input
           name="transfermarktUrl"
           placeholder="Transfermarkt URL"
           value={formData.transfermarktUrl}
-          onChange={handleChange}
+          onChange={(e) => setFormData({ ...formData, transfermarktUrl: e.target.value })}
           style={{ flex: 3, padding: '8px' }}
         />
         <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>Search</button>
       </div>
-
-      {/* Show player photo if available */}
       {formData.photoUrl && (
-        <img
-          src={formData.photoUrl}
-          alt="Player"
-          style={{ width: '100px', height: '100px', borderRadius: '8px', marginBottom: '10px' }}
-        />
+        <img src={formData.photoUrl} alt="Player" style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }} />
       )}
-
-      {/* Form fields */}
-      {[
-        ['playerName', 'Player Name'],
-        ['reportDate', 'Report Date'],
-        ['team', 'Team / Club'],
-        ['opposition', 'Opposition'],
-        ['position', 'Position'],
-        ['formation', 'Formation'],
-        ['tacticalRole', 'Tactical Role'],
-        ['mg', 'MG (1–10)'],
-        ['nationality', 'Nationality'],
-        ['age', 'Age'],
-        ['fixtureTeamName', 'Team Name for Fixture Search']
-      ].map(([key, label]) => (
-        <input
-          key={key}
-          name={key}
-          placeholder={label}
-          value={formData[key]}
-          onChange={handleChange}
-          style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-        />
-      ))}
-
-      {/* Textareas */}
-      <textarea name="physical" placeholder="Physical" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
-      <textarea name="oop" placeholder="OOP" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
-      <textarea name="ip" placeholder="IP" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
-      <textarea name="summary" placeholder="Summary" onChange={handleChange} style={{ width: '100%', minHeight: '100px', marginBottom: '10px', padding: '8px' }} />
+      {/* Other form fields go here... */}
     </div>
   );
 }
