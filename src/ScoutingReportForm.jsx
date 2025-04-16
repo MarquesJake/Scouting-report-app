@@ -23,6 +23,8 @@ export default function ScoutingReportForm() {
   const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
 
+  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNG...REPLACE_THIS.../exec"; // Replace with your actual deployed script URL
+
   const extractTransfermarktId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
     return match ? match[1] : null;
@@ -72,7 +74,7 @@ export default function ScoutingReportForm() {
     setFormData({ ...formData, fixtureSearch: fixture });
   };
 
-  const generateReport = () => {
+  const generateReport = async () => {
     const {
       playerName,
       date,
@@ -102,6 +104,19 @@ export default function ScoutingReportForm() {
     }\n**Physical**\n${physical}\n\n**OOP**\n${oop}\n\n**IP**\n${ip}\n\n**Summary**\n${summary}`;
 
     setReport(fullReport);
+
+    try {
+      await fetch(SHEETS_WEBHOOK_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+    } catch (err) {
+      console.error("Error sending to Google Sheets:", err);
+    }
   };
 
   return (
