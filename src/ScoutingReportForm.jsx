@@ -44,12 +44,12 @@ export default function ScoutingReportForm() {
 
       setFormData((prev) => ({
         ...prev,
-        playerName: data.name || '',
-        team: data.club || '',
-        position: data.position || '',
-        nationality: data.nationality || '',
-        age: data.age || '',
-        photoUrl: data.image || ''
+        playerName: data.name || prev.playerName,
+        team: data.club || prev.team,
+        position: data.position || prev.position,
+        nationality: data.nationality || prev.nationality,
+        age: data.age || prev.age,
+        photoUrl: data.image || prev.photoUrl
       }));
     } catch (error) {
       console.error("Error fetching Transfermarkt data", error);
@@ -62,7 +62,7 @@ export default function ScoutingReportForm() {
 
   const handleTransfermarktChange = async (e) => {
     const url = e.target.value;
-    setFormData({ ...formData, transfermarktUrl: url });
+    setFormData((prev) => ({ ...prev, transfermarktUrl: url }));
     await autoFillFromTransfermarkt(url);
   };
 
@@ -73,7 +73,7 @@ export default function ScoutingReportForm() {
     try {
       const response = await fetch(`https://api.football-data.org/v4/teams`, {
         headers: {
-          'X-Auth-Token': 'YOUR_API_KEY_HERE' // Replace with your API key
+          'X-Auth-Token': 'YOUR_API_KEY_HERE'
         }
       });
 
