@@ -42,9 +42,12 @@ export default function ScoutingReportForm() {
       const response = await fetch(`https://transfermarkt-api.vercel.app/player/${playerId}`);
       const data = await response.json();
 
+      const nameFromUrl = url.split('/')[3]?.replace(/-/g, ' ');
+      const formattedName = nameFromUrl?.split(' ').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+
       setFormData((prev) => ({
         ...prev,
-        playerName: data.name || prev.playerName,
+        playerName: formattedName || prev.playerName,
         team: data.club || prev.team,
         position: data.position || prev.position,
         nationality: data.nationality || prev.nationality,
