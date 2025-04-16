@@ -23,6 +23,7 @@ export default function ScoutingReportForm() {
   const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
   const [popupVisible, setPopupVisible] = useState(false);
+  const [selectedFixtureIndex, setSelectedFixtureIndex] = useState(null);
 
   const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
 
@@ -69,10 +70,12 @@ export default function ScoutingReportForm() {
       `${fixtureTeamName} vs Sample Club - ${fixtureDate}`
     ];
     setFixtureOptions(mockFixtures);
+    setSelectedFixtureIndex(null);
   };
 
-  const selectFixture = (fixture) => {
+  const selectFixture = (fixture, index) => {
     setFormData({ ...formData, fixtureSearch: fixture });
+    setSelectedFixtureIndex(index);
   };
 
   const generateReport = async () => {
@@ -126,7 +129,21 @@ export default function ScoutingReportForm() {
       <button onClick={handleFixtureSearch} style={{ width: '100%', padding: '10px', marginBottom: '12px', background: '#eee', borderRadius: '6px' }}>Search Fixtures</button>
 
       {fixtureOptions.map((fixture, i) => (
-        <button key={i} onClick={() => selectFixture(fixture)} style={{ width: '100%', padding: '10px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #ccc', background: '#f9f9f9' }}>{fixture}</button>
+        <button
+          key={i}
+          onClick={() => selectFixture(fixture, i)}
+          style={{
+            width: '100%',
+            padding: '10px',
+            marginBottom: '8px',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
+            background: selectedFixtureIndex === i ? '#d1e7dd' : '#f9f9f9',
+            fontWeight: selectedFixtureIndex === i ? 'bold' : 'normal'
+          }}
+        >
+          {fixture}
+        </button>
       ))}
 
       {[['physical', 'Physical'], ['oop', 'OOP'], ['ip', 'IP'], ['summary', 'Summary']]
