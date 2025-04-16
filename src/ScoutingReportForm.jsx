@@ -1,8 +1,4 @@
 import { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 export default function ScoutingReportForm() {
   const [formData, setFormData] = useState({
@@ -64,14 +60,11 @@ export default function ScoutingReportForm() {
 
   const handleFixtureSearch = async () => {
     const { fixtureTeamName, fixtureDate } = formData;
-
-    // TEMP: replace with real API call
     const mockFixtures = [
       `${fixtureTeamName} vs FC Example - ${fixtureDate}`,
       `${fixtureTeamName} vs Another Team - ${fixtureDate}`,
       `${fixtureTeamName} vs Sample Club - ${fixtureDate}`
     ];
-
     setFixtureOptions(mockFixtures);
   };
 
@@ -112,49 +105,42 @@ export default function ScoutingReportForm() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-4">
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <Input name="playerName" placeholder="Player Name" value={formData.playerName} onChange={handleChange} />
-          <Input name="date" placeholder="Date" onChange={handleChange} />
-          <Input name="team" placeholder="Team / Club" value={formData.team} onChange={handleChange} />
-          <Input name="opposition" placeholder="Opposition" onChange={handleChange} />
-          <Input name="position" placeholder="Position" onChange={handleChange} />
-          <Input name="formation" placeholder="Formation" onChange={handleChange} />
-          <Input name="tacticalRole" placeholder="Tactical Role" onChange={handleChange} />
-          <Input name="mg" placeholder="MG (1-10)" type="number" min="1" max="10" onChange={handleChange} />
-          <Input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} />
+    <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
+      <h2>Scouting Report Form</h2>
+      {[
+        ['playerName', 'Player Name'],
+        ['date', 'Date'],
+        ['team', 'Team / Club'],
+        ['opposition', 'Opposition'],
+        ['position', 'Position'],
+        ['formation', 'Formation'],
+        ['tacticalRole', 'Tactical Role'],
+        ['mg', 'MG (1–10)']
+      ].map(([key, label]) => (
+        <input key={key} name={key} placeholder={label} onChange={handleChange} value={formData[key]} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      ))}
 
-          <div className="space-y-2">
-            <Input name="fixtureTeamName" placeholder="Team Name for Fixture Search" onChange={handleChange} />
-            <Input name="fixtureDate" type="date" placeholder="Fixture Date" onChange={handleChange} />
-            <Button onClick={handleFixtureSearch}>Search Fixtures</Button>
-            {fixtureOptions.length > 0 && (
-              <div className="space-y-2">
-                {fixtureOptions.map((fixture, index) => (
-                  <Button key={index} variant="outline" onClick={() => selectFixture(fixture)}>
-                    {fixture}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
+      <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
 
-          <Textarea name="physical" placeholder="Physical" onChange={handleChange} />
-          <Textarea name="oop" placeholder="OOP" onChange={handleChange} />
-          <Textarea name="ip" placeholder="IP" onChange={handleChange} />
-          <Textarea name="summary" placeholder="Summary" onChange={handleChange} />
+      <input name="fixtureTeamName" placeholder="Team Name for Fixture Search" onChange={handleChange} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input name="fixtureDate" type="date" onChange={handleChange} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <button onClick={handleFixtureSearch} style={{ width: '100%', padding: '10px', marginBottom: '10px' }}>Search Fixtures</button>
 
-          <Button onClick={generateReport}>Generate Report</Button>
-        </CardContent>
-      </Card>
+      {fixtureOptions.map((fixture, i) => (
+        <button key={i} onClick={() => selectFixture(fixture)} style={{ width: '100%', padding: '8px', marginBottom: '5px' }}>{fixture}</button>
+      ))}
+
+      <textarea name="physical" placeholder="Physical" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
+      <textarea name="oop" placeholder="OOP" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
+      <textarea name="ip" placeholder="IP" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
+      <textarea name="summary" placeholder="Summary" onChange={handleChange} style={{ width: '100%', minHeight: '100px', marginBottom: '10px', padding: '8px' }} />
+
+      <button onClick={generateReport} style={{ width: '100%', padding: '12px', background: '#222', color: '#fff', border: 'none' }}>Generate Report</button>
 
       {report && (
-        <Card>
-          <CardContent className="whitespace-pre-wrap pt-6">
-            {report}
-          </CardContent>
-        </Card>
+        <div style={{ marginTop: '2rem', whiteSpace: 'pre-wrap', backgroundColor: '#f5f5f5', padding: '1rem', borderRadius: '8px' }}>
+          {report}
+        </div>
       )}
     </div>
   );
