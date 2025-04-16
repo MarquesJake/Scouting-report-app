@@ -24,8 +24,6 @@ export default function ScoutingReportForm() {
 
   const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
-  const [popupVisible, setPopupVisible] = useState(false);
-  const [selectedFixtureIndex, setSelectedFixtureIndex] = useState(null);
 
   const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
 
@@ -37,25 +35,28 @@ export default function ScoutingReportForm() {
   const autoFillFromTransfermarkt = async () => {
     const url = formData.transfermarktUrl;
     const playerId = extractTransfermarktId(url);
-    if (!playerId) return;
+    if (!playerId) {
+      alert("Invalid Transfermarkt link");
+      return;
+    }
 
     try {
-      const response = await fetch(`https://transfermarkt-api.vercel.app/player/${playerId}`);
+      const response = await fetch(`/api/player-info/${playerId}`); // <--- Backend proxy route
       const data = await response.json();
 
       if (!data.name) {
-        alert("Player not found. Double check the Transfermarkt link or try a different player.");
+        alert("Player not found. Double check the link.");
         return;
       }
 
       setFormData((prev) => ({
         ...prev,
-        playerName: data.name || prev.playerName,
-        team: data.club || prev.team,
-        position: data.position || prev.position,
-        nationality: data.nationality || prev.nationality,
-        age: data.age || prev.age,
-        photoUrl: data.image || prev.photoUrl
+        playerName: data.name,
+        team: data.club,
+        position: data.position,
+        nationality: data.nationality,
+        age: data.age,
+        photoUrl: data.image
       }));
     } catch (error) {
       console.error("Error fetching Transfermarkt data", error);
@@ -75,10 +76,16 @@ export default function ScoutingReportForm() {
         />
         <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>Search</button>
       </div>
+
       {formData.photoUrl && (
         <img src={formData.photoUrl} alt="Player" style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }} />
       )}
-      {/* Other form fields go here... */}
+
+      <input name="playerName" placeholder="Player Name" value={formData.playerName} readOnly style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input name="team" placeholder="Team / Club" value={formData.team} readOnly style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input name="position" placeholder="Position" value={formData.position} readOnly style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input name="nationality" placeholder="Nationality" value={formData.nationality} readOnly style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      <input name="age" placeholder="Age" value={formData.age} readOnly style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
     </div>
   );
 }
