@@ -22,9 +22,9 @@ export default function ScoutingReportForm() {
 
   const [report, setReport] = useState('');
   const [fixtureOptions, setFixtureOptions] = useState([]);
+  const [popupVisible, setPopupVisible] = useState(false);
 
   const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
-
 
   const extractTransfermarktId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
@@ -76,33 +76,16 @@ export default function ScoutingReportForm() {
   };
 
   const generateReport = async () => {
-    const {
-      playerName,
-      date,
-      team,
-      opposition,
-      position,
-      formation,
-      tacticalRole,
-      mg,
-      physical,
-      oop,
-      ip,
-      summary,
-      transfermarktUrl,
-      fixtureSearch
-    } = formData;
-
-    const transfermarktId = extractTransfermarktId(transfermarktUrl);
+    const transfermarktId = extractTransfermarktId(formData.transfermarktUrl);
     const transfermarktLink = transfermarktId
       ? `https://www.transfermarkt.com/player/profil/spieler/${transfermarktId}`
       : '';
 
-    const fullReport = `**Player:** ${playerName}\n**Date:** ${date}\n**Team:** ${team}\n**Opposition:** ${opposition}\n**Position:** ${position}\n**Formation:** ${formation}\n**Tactical Role:** ${tacticalRole}\n**MG:** ${mg}/10\n${
+    const fullReport = `**Player:** ${formData.playerName}\n**Date:** ${formData.date}\n**Team:** ${formData.team}\n**Opposition:** ${formData.opposition}\n**Position:** ${formData.position}\n**Formation:** ${formData.formation}\n**Tactical Role:** ${formData.tacticalRole}\n**MG:** ${formData.mg}/10\n$${
       transfermarktLink ? `**Transfermarkt Profile:** [Link](${transfermarktLink})\n` : ''
-    }${
-      fixtureSearch ? `**Fixture:** ${fixtureSearch}\n` : ''
-    }\n**Physical**\n${physical}\n\n**OOP**\n${oop}\n\n**IP**\n${ip}\n\n**Summary**\n${summary}`;
+    }$${
+      formData.fixtureSearch ? `**Fixture:** ${formData.fixtureSearch}\n` : ''
+    }\n**Physical**\n${formData.physical}\n\n**OOP**\n${formData.oop}\n\n**IP**\n${formData.ip}\n\n**Summary**\n${formData.summary}`;
 
     setReport(fullReport);
 
@@ -115,47 +98,47 @@ export default function ScoutingReportForm() {
         },
         body: JSON.stringify(formData)
       });
+
+      setPopupVisible(true);
+      setTimeout(() => {
+        setPopupVisible(false);
+        window.location.reload();
+      }, 2000);
+
     } catch (err) {
       console.error("Error sending to Google Sheets:", err);
     }
   };
 
   return (
-    <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
-      <h2>Scouting Report Form</h2>
-      {[
-        ['playerName', 'Player Name'],
-        ['date', 'Date'],
-        ['team', 'Team / Club'],
-        ['opposition', 'Opposition'],
-        ['position', 'Position'],
-        ['formation', 'Formation'],
-        ['tacticalRole', 'Tactical Role'],
-        ['mg', 'MG (1–10)']
-      ].map(([key, label]) => (
-        <input key={key} name={key} placeholder={label} onChange={handleChange} value={formData[key]} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      ))}
+    <div style={{ maxWidth: '720px', margin: 'auto', padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+      <h2 style={{ marginBottom: '1rem' }}>Scouting Report Form</h2>
 
-      <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
+      {[['playerName', 'Player Name'], ['date', 'Date'], ['team', 'Team / Club'], ['opposition', 'Opposition'], ['position', 'Position'], ['formation', 'Formation'], ['tacticalRole', 'Tactical Role'], ['mg', 'MG (1–10)']]
+        .map(([key, label]) => (
+          <input key={key} name={key} placeholder={label} onChange={handleChange} value={formData[key]} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        ))}
 
-      <input name="fixtureTeamName" placeholder="Team Name for Fixture Search" onChange={handleChange} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      <input name="fixtureDate" type="date" onChange={handleChange} style={{ width: '100%', marginBottom: '10px', padding: '8px' }} />
-      <button onClick={handleFixtureSearch} style={{ width: '100%', padding: '10px', marginBottom: '10px' }}>Search Fixtures</button>
+      <input name="transfermarktUrl" placeholder="Transfermarkt URL" onChange={handleTransfermarktChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+
+      <input name="fixtureTeamName" placeholder="Team Name for Fixture Search" onChange={handleChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+      <input name="fixtureDate" type="date" onChange={handleChange} style={{ width: '100%', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+      <button onClick={handleFixtureSearch} style={{ width: '100%', padding: '10px', marginBottom: '12px', background: '#eee', borderRadius: '6px' }}>Search Fixtures</button>
 
       {fixtureOptions.map((fixture, i) => (
-        <button key={i} onClick={() => selectFixture(fixture)} style={{ width: '100%', padding: '8px', marginBottom: '5px' }}>{fixture}</button>
+        <button key={i} onClick={() => selectFixture(fixture)} style={{ width: '100%', padding: '10px', marginBottom: '8px', borderRadius: '6px', border: '1px solid #ccc', background: '#f9f9f9' }}>{fixture}</button>
       ))}
 
-      <textarea name="physical" placeholder="Physical" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
-      <textarea name="oop" placeholder="OOP" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
-      <textarea name="ip" placeholder="IP" onChange={handleChange} style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }} />
-      <textarea name="summary" placeholder="Summary" onChange={handleChange} style={{ width: '100%', minHeight: '100px', marginBottom: '10px', padding: '8px' }} />
+      {[['physical', 'Physical'], ['oop', 'OOP'], ['ip', 'IP'], ['summary', 'Summary']]
+        .map(([key, label]) => (
+          <textarea key={key} name={key} placeholder={label} onChange={handleChange} value={formData[key]} style={{ width: '100%', minHeight: '80px', marginBottom: '12px', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }} />
+        ))}
 
-      <button onClick={generateReport} style={{ width: '100%', padding: '12px', background: '#222', color: '#fff', border: 'none' }}>Generate Report</button>
+      <button onClick={generateReport} style={{ width: '100%', padding: '12px', background: '#222', color: '#fff', border: 'none', borderRadius: '6px' }}>Submit Report</button>
 
-      {report && (
-        <div style={{ marginTop: '2rem', whiteSpace: 'pre-wrap', backgroundColor: '#f5f5f5', padding: '1rem', borderRadius: '8px' }}>
-          {report}
+      {popupVisible && (
+        <div style={{ position: 'fixed', top: '20px', right: '20px', background: '#4CAF50', color: '#fff', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}>
+          ✅ Report submitted!
         </div>
       )}
     </div>
