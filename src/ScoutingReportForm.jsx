@@ -86,17 +86,18 @@ export default function ScoutingReportForm() {
             }
           });
           const rapidData = await rapidRes.json();
+          const player = rapidData?.data;
 
-          if (!rapidData || !rapidData.name) throw new Error("RapidAPI response incomplete");
+          if (!player || !player.name) throw new Error("RapidAPI response incomplete");
 
           setFormData((prev) => ({
             ...prev,
-            playerName: rapidData.name || '',
-            team: rapidData.club || '',
-            position: rapidData.position || '',
-            nationality: rapidData.nationality || '',
-            age: rapidData.age || '',
-            photoUrl: rapidData.image || ''
+            playerName: player.name || '',
+            team: player.club || '',
+            position: player.position || '',
+            nationality: player.nationality || '',
+            age: player.age || '',
+            photoUrl: player.image || ''
           }));
         } catch (err3) {
           console.error("All APIs failed:", err3);
