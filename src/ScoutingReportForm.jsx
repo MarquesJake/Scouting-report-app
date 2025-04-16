@@ -43,9 +43,9 @@ export default function ScoutingReportForm() {
     }
 
     try {
-      // Try local running API first (priority)
-      let response = await fetch(`http://localhost:8000/player/${playerId}`);
-      if (!response.ok) throw new Error("Local API failed");
+      // Try Fly.io hosted API (preferred)
+      let response = await fetch(`https://transfermarkt-api.fly.dev/player/${playerId}`);
+      if (!response.ok) throw new Error("Fly.io API failed");
       let data = await response.json();
 
       setFormData((prev) => ({
@@ -58,7 +58,7 @@ export default function ScoutingReportForm() {
         photoUrl: data.image || ''
       }));
     } catch (err1) {
-      console.warn("Local API failed, trying GitHub-hosted fallback", err1);
+      console.warn("Fly.io API failed, trying GitHub-hosted fallback", err1);
       try {
         const fallback = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://transfermarkt-api.vercel.app/player/${playerId}`)}`);
         const data = await fallback.json();
