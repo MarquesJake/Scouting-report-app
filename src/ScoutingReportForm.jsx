@@ -38,13 +38,9 @@ export default function ScoutingReportForm() {
   const autoFillFromTransfermarkt = async () => {
     const url = formData.transfermarktUrl;
     const playerId = extractTransfermarktId(url);
-    if (!playerId) {
-      alert("Could not extract player ID from URL");
-      return;
-    }
 
     try {
-      // Try Fly.io hosted API (preferred)
+      // 1. Fly.io API (Primary)
       let response = await fetch(`https://transfermarkt-api.fly.dev/player/${playerId}`);
       if (!response.ok) throw new Error("Fly.io API failed");
       let data = await response.json();
@@ -59,7 +55,7 @@ export default function ScoutingReportForm() {
         photoUrl: data.image || ''
       }));
     } catch (err1) {
-      console.warn("Fly.io API failed, trying GitHub-hosted fallback", err1);
+      console.warn("Fly.io API failed, trying GitHub fallback", err1);
       try {
         const fallback = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://transfermarkt-api.vercel.app/player/${playerId}`)}`);
         const data = await fallback.json();
@@ -76,19 +72,25 @@ export default function ScoutingReportForm() {
           photoUrl: data.image || ''
         }));
       } catch (err2) {
-        console.warn("GitHub-hosted API failed, trying RapidAPI fallback", err2);
+        console.warn("GitHub fallback failed, trying RapidAPI", err2);
         try {
-          const rapidRes = await fetch(`https://transfermarket.p.rapidapi.com/players/get-profile?transfermarktId=${playerId}`, {
+          const slugMatch = url.match(/transfermarkt\.co\.uk\/(.*?)\/profil/);
+          const slug = slugMatch ? slugMatch[1] : null;
+
+          if (!slug) throw new Error("Could not extract slug");
+
+          const rapidRes = await fetch(`https://transfermarket.p.rapidapi.com/players/search-player?query=${slug}`, {
             method: 'GET',
             headers: {
               'X-RapidAPI-Key': RAPID_API_KEY,
               'X-RapidAPI-Host': 'transfermarket.p.rapidapi.com'
             }
           });
-          const rapidData = await rapidRes.json();
-          const player = rapidData?.data;
 
-          if (!player || !player.name) throw new Error("RapidAPI response incomplete");
+          const rapidData = await rapidRes.json();
+          const player = rapidData?.data?.[0];
+
+          if (!player || !player.name) throw new Error("RapidAPI search failed");
 
           setFormData((prev) => ({
             ...prev,
