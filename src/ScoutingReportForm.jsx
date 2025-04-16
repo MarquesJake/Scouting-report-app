@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import './style.css';
 
-export default function ScoutingReportForm() {
-  const [formData, setFormData] = useState({
+const ScoutingReportForm = () => {
+  const [playerUrl, setPlayerUrl] = useState('');
+  const [playerData, setPlayerData] = useState(null);
+  const [formFields, setFormFields] = useState({
     playerName: '',
     reportDate: '',
     team: '',
@@ -10,122 +13,98 @@ export default function ScoutingReportForm() {
     formation: '',
     tacticalRole: '',
     mg: '',
+    nationality: '',
+    age: '',
+    fixtureSearch: '',
     physical: '',
     oop: '',
     ip: '',
-    summary: '',
-    transfermarktUrl: '',
-    fixtureSearch: '',
-    fixtureTeamName: '',
-    nationality: '',
-    age: '',
-    photoUrl: ''
+    summary: ''
   });
 
-  const [report, setReport] = useState('');
-  const [fixtureOptions, setFixtureOptions] = useState([]);
-  const [popupVisible, setPopupVisible] = useState(false);
-  const [selectedFixtureIndex, setSelectedFixtureIndex] = useState(null);
-
-  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
-  const RAPID_API_KEY = "ec0f6da911msh397a0a7a4ac8a3fp1f44f2jsn249a9bbcf3cd";
-
-  const extractTransfermarktId = (url) => {
-    const match = url.match(/spieler\/(\d+)/);
-    return match ? match[1] : null;
+  const extractPlayerName = (url) => {
+    const regex = /transfermarkt\.[^\/]+\/([^\/]+)\/profil/;
+    const match = url.match(regex);
+    return match ? match[1].replace(/-/g, ' ') : null;
   };
 
-  const autoFillFromTransfermarkt = async () => {
-    const url = formData.transfermarktUrl;
-    const playerId = extractTransfermarktId(url);
+  const handleSearch = async () => {
+    const playerName = extractPlayerName(playerUrl);
+    if (!playerName) {
+      alert('Invalid Transfermarkt URL');
+      return;
+    }
 
     try {
-      // 1. Fly.io API (Primary)
-      let response = await fetch(`https://transfermarkt-api.fly.dev/player/${playerId}`);
-      if (!response.ok) throw new Error("Fly.io API failed");
-      let data = await response.json();
-
-      setFormData((prev) => ({
-        ...prev,
-        playerName: data.name || '',
-        team: data.club || '',
-        position: data.position || '',
-        nationality: data.nationality || '',
-        age: data.age || '',
-        photoUrl: data.image || ''
-      }));
-    } catch (err1) {
-      console.warn("Fly.io API failed, trying GitHub fallback", err1);
-      try {
-        const fallback = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://transfermarkt-api.vercel.app/player/${playerId}`)}`);
-        const data = await fallback.json();
-
-        if (!data.name) throw new Error("Fallback API failed or player not found");
-
-        setFormData((prev) => ({
-          ...prev,
-          playerName: data.name || '',
-          team: data.club || '',
-          position: data.position || '',
-          nationality: data.nationality || '',
-          age: data.age || '',
-          photoUrl: data.image || ''
-        }));
-      } catch (err2) {
-        console.warn("GitHub fallback failed, trying RapidAPI", err2);
-        try {
-          const slugMatch = url.match(/transfermarkt\.co\.uk\/(.*?)\/profil/);
-          const slug = slugMatch ? slugMatch[1] : null;
-
-          if (!slug) throw new Error("Could not extract slug");
-
-          const rapidRes = await fetch(`https://transfermarket.p.rapidapi.com/players/search-player?query=${slug}`, {
-            method: 'GET',
-            headers: {
-              'X-RapidAPI-Key': RAPID_API_KEY,
-              'X-RapidAPI-Host': 'transfermarket.p.rapidapi.com'
-            }
-          });
-
-          const rapidData = await rapidRes.json();
-          const player = rapidData?.data?.[0];
-
-          if (!player || !player.name) throw new Error("RapidAPI search failed");
-
-          setFormData((prev) => ({
-            ...prev,
-            playerName: player.name || '',
-            team: player.club || '',
-            position: player.position || '',
-            nationality: player.nationality || '',
-            age: player.age || '',
-            photoUrl: player.image || ''
-          }));
-        } catch (err3) {
-          console.error("All APIs failed:", err3);
-          alert("Player not found. Check the link or try a different one.");
+      const response = await fetch(
+        `https://transfermarket.p.rapidapi.com/players/search-player?query=${encodeURIComponent(playerName)}`,
+        {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Key': 'ec0f6da911msh397a0a7a4ac8a3fp1f44f2jsn249a9bbcf3cd',
+            'X-RapidAPI-Host': 'transfermarket.p.rapidapi.com'
+          }
         }
+      );
+      const data = await response.json();
+      if (!data || data.length === 0) {
+        alert('Player not found. Check the link or try a different one.');
+        return;
       }
+
+      const player = data[0];
+      setPlayerData(player);
+      setFormFields((prev) => ({
+        ...prev,
+        playerName: player.name || '',
+        team: player.club || '',
+        age: player.age || '',
+        nationality: player.nationality || '',
+        position: player.position || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      alert('Something went wrong while fetching data.');
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormFields((prev) => ({ ...prev, [name]: value }));
+  };
+
   return (
-    <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
-      <h2>Scouting Report Form</h2>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '10px' }}>
+    <div className="container">
+      <h1>Scouting Report Form</h1>
+      <div className="input-group">
         <input
-          name="transfermarktUrl"
-          placeholder="Transfermarkt URL"
-          value={formData.transfermarktUrl}
-          onChange={(e) => setFormData({ ...formData, transfermarktUrl: e.target.value })}
-          style={{ flex: 3, padding: '8px' }}
+          type="text"
+          value={playerUrl}
+          onChange={(e) => setPlayerUrl(e.target.value)}
+          placeholder="Paste Transfermarkt player URL"
         />
-        <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>Search</button>
+        <button onClick={handleSearch}>Search</button>
       </div>
-      {formData.photoUrl && (
-        <img src={formData.photoUrl} alt="Player" style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }} />
-      )}
-      {/* Other form fields go here... */}
+
+      <div className="form">
+        <input name="playerName" value={formFields.playerName} onChange={handleChange} placeholder="Player Name" />
+        <input name="reportDate" value={formFields.reportDate} onChange={handleChange} placeholder="Report Date" />
+        <input name="team" value={formFields.team} onChange={handleChange} placeholder="Team / Club" />
+        <input name="opposition" value={formFields.opposition} onChange={handleChange} placeholder="Opposition" />
+        <input name="position" value={formFields.position} onChange={handleChange} placeholder="Position" />
+        <input name="formation" value={formFields.formation} onChange={handleChange} placeholder="Formation" />
+        <input name="tacticalRole" value={formFields.tacticalRole} onChange={handleChange} placeholder="Tactical Role" />
+        <input name="mg" value={formFields.mg} onChange={handleChange} placeholder="MG (1–10)" />
+        <input name="nationality" value={formFields.nationality} onChange={handleChange} placeholder="Nationality" />
+        <input name="age" value={formFields.age} onChange={handleChange} placeholder="Age" />
+        <input name="fixtureSearch" value={formFields.fixtureSearch} onChange={handleChange} placeholder="Team Name for Fixture Search" />
+        <textarea name="physical" value={formFields.physical} onChange={handleChange} placeholder="Physical" />
+        <textarea name="oop" value={formFields.oop} onChange={handleChange} placeholder="OOP" />
+        <textarea name="ip" value={formFields.ip} onChange={handleChange} placeholder="IP" />
+        <textarea name="summary" value={formFields.summary} onChange={handleChange} placeholder="Summary" />
+      </div>
     </div>
   );
-}
+};
+
+export default ScoutingReportForm;
