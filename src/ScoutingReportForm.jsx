@@ -22,36 +22,38 @@ export default function ScoutingReportForm() {
     photoUrl: ''
   });
 
-  const [fixtureOptions, setFixtureOptions] = useState([]);
-
-  const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzIh7QXuXyqi9jmXTFocNtPac4kUBBJNGHX4_reWsZ9hyoJHfrfudnaNMaMIUMQiENu/exec";
-
-  const extractTransfermarktId = (url) => {
+  const extractPlayerId = (url) => {
     const match = url.match(/spieler\/(\d+)/);
     return match ? match[1] : null;
   };
 
   const autoFillFromTransfermarkt = async () => {
-    const url = formData.transfermarktUrl;
-    const playerId = extractTransfermarktId(url);
+    const playerId = extractPlayerId(formData.transfermarktUrl);
     if (!playerId) {
       alert("Could not extract player ID from URL");
       return;
     }
 
     try {
-      const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://transfermarkt-api.vercel.app/player/${playerId}`)}`);
+      const response = await fetch(`https://transfermarkt13.p.rapidapi.com/player_info?player_id=${playerId}`, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': 'ec0f6da911msh397a0a7a4ac8a3fp1f44f2jsn249a9bbcf3cd',
+          'X-RapidAPI-Host': 'transfermarkt13.p.rapidapi.com'
+        }
+      });
+
       const data = await response.json();
 
       if (!data.name) {
-        alert("Player not found. Try a different Transfermarkt URL.");
+        alert("Player not found. Check the link or try a different one.");
         return;
       }
 
       setFormData((prev) => ({
         ...prev,
         playerName: data.name || '',
-        team: data.club || '',
+        team: data.current_club?.name || '',
         position: data.position || '',
         nationality: data.nationality || '',
         age: data.age || '',
@@ -63,10 +65,6 @@ export default function ScoutingReportForm() {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
   return (
     <div style={{ maxWidth: '720px', margin: 'auto', padding: '1rem' }}>
       <h2>Scouting Report Form</h2>
@@ -76,63 +74,28 @@ export default function ScoutingReportForm() {
           name="transfermarktUrl"
           placeholder="Transfermarkt URL"
           value={formData.transfermarktUrl}
-          onChange={handleChange}
+          onChange={(e) => setFormData({ ...formData, transfermarktUrl: e.target.value })}
           style={{ flex: 3, padding: '8px' }}
         />
-        <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>Search</button>
+        <button onClick={autoFillFromTransfermarkt} style={{ flex: 1, padding: '8px 16px' }}>
+          Search
+        </button>
       </div>
 
       {formData.photoUrl && (
         <img src={formData.photoUrl} alt="Player" style={{ width: '100px', borderRadius: '8px', marginBottom: '10px' }} />
       )}
 
-      {[
-        ['playerName', 'Player Name'],
-        ['reportDate', 'Report Date'],
-        ['team', 'Team / Club'],
-        ['opposition', 'Opposition'],
-        ['position', 'Position'],
-        ['formation', 'Formation'],
-        ['tacticalRole', 'Tactical Role'],
-        ['mg', 'MG (1–10)'],
-        ['nationality', 'Nationality'],
-        ['age', 'Age'],
-        ['fixtureTeamName', 'Team Name for Fixture Search']
-      ].map(([key, label]) => (
-        <input
-          key={key}
-          name={key}
-          placeholder={label}
-          value={formData[key]}
-          onChange={handleChange}
-          style={{ width: '100%', marginBottom: '10px', padding: '8px' }}
-        />
-      ))}
-
-      <textarea
-        name="physical"
-        placeholder="Physical"
-        onChange={handleChange}
-        style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }}
-      />
-      <textarea
-        name="oop"
-        placeholder="OOP"
-        onChange={handleChange}
-        style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }}
-      />
-      <textarea
-        name="ip"
-        placeholder="IP"
-        onChange={handleChange}
-        style={{ width: '100%', minHeight: '80px', marginBottom: '10px', padding: '8px' }}
-      />
-      <textarea
-        name="summary"
-        placeholder="Summary"
-        onChange={handleChange}
-        style={{ width: '100%', minHeight: '100px', marginBottom: '10px', padding: '8px' }}
-      />
+      <input placeholder="Player Name" value={formData.playerName} readOnly />
+      <input placeholder="Report Date" value={formData.reportDate} onChange={(e) => setFormData({ ...formData, reportDate: e.target.value })} />
+      <input placeholder="Team / Club" value={formData.team} readOnly />
+      <input placeholder="Opposition" value={formData.opposition} onChange={(e) => setFormData({ ...formData, opposition: e.target.value })} />
+      <input placeholder="Position" value={formData.position} readOnly />
+      <input placeholder="Formation" value={formData.formation} onChange={(e) => setFormData({ ...formData, formation: e.target.value })} />
+      <input placeholder="Tactical Role" value={formData.tacticalRole} onChange={(e) => setFormData({ ...formData, tacticalRole: e.target.value })} />
+      <input placeholder="MG (1–10)" value={formData.mg} onChange={(e) => setFormData({ ...formData, mg: e.target.value })} />
+      <input placeholder="Nationality" value={formData.nationality} readOnly />
+      <input placeholder="Age" value={formData.age} readOnly />
     </div>
   );
 }
